@@ -43,10 +43,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CollectionModifiers\CollectionModifiers.cs" />
+    <Compile Include="CollectionModifiers\IdenticalCollectionModifier.cs" />
+    <Compile Include="RandomChoiceMonad\IChoiceMonad.cs" />
+    <Compile Include="Model\Field.cs" />
+    <Compile Include="Model\Matrix.cs" />
+    <Compile Include="Model\ModelRepository.cs" />
+    <Compile Include="Model\Question.cs" />
+    <Compile Include="Model\Survey.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomChoiceMonad\ExhaustiveRandomChoiceMonad.cs" />
+    <Compile Include="CollectionModifiers\ICollectionModifier.cs" />
     <Compile Include="RandomChoiceMonad\RandomChoiceMonad.cs" />
+    <Compile Include="CollectionModifiers\RandomCollectionModifier.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

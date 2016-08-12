@@ -25,12 +25,25 @@ namespace RandomChoiceMonad.RandomChoiceMonad
         }
     }
 
+    class ResultPack<T, TItem>
+    {
+        public ResultPack(
+            IEnumerator<TItem> enumerator,
+            T currentSource)
+        {
+            Enumerator = enumerator;
+            CurrentSource = currentSource;
+        }
+
+        public IEnumerator<TItem> Enumerator { get; private set; }
+        public T CurrentSource { get; private set; }
+    }
+
     class ExhaustiveRandomChoiceMonad<T> : IChoiceMonad<T> where T : class
     {
         private readonly Func<Tuple<bool, T>> _toGetNextSource;
         private readonly ICollectionModifier _collectionModifier;
         private T _currentSource; 
-        private object _itemsEnumerator;
 
         public ExhaustiveRandomChoiceMonad(ICollectionModifier collectionModifier, Func<Tuple<bool, T>> toGetNextSource)
         {
@@ -48,13 +61,19 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             if (_toGetNextSource == null || CurrentSource == null)
                 return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null);
 
-            _itemsEnumerator = Get(CurrentSource, f);
+            var resultPack = GetEnumerator(CurrentSource, _collectionModifier, f);
+            CurrentSource = resultPack.CurrentSource;
+            var itemsEnumerator = resultPack.Enumerator;
 
-            if (_itemsEnumerator == null) return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null);
-            return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, () => GetNext(f));
+            if (itemsEnumerator == null) return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null);
+            return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, () => GetNext(itemsEnumerator, f));
         }
 
-        private IEnumerator<TItem> Get<TItem>(T currentSource, Func<T, IEnumerable<TItem>> f) where TItem : class
+        private ResultPack<T, TItem> GetEnumerator<TItem>(
+            T currentSource, 
+            ICollectionModifier collectionModifier,
+            Func<T, IEnumerable<TItem>> f) 
+            where TItem : class
         {
             dynamic named = currentSource;
             Console.WriteLine("...{0}:{1}", typeof(T).Name, named.Name);
@@ -63,7 +82,7 @@ namespace RandomChoiceMonad.RandomChoiceMonad
 
             if (set != null && set.Any())
             {
-                return _collectionModifier.Modify(set).GetEnumerator();
+                return new ResultPack<T, TItem>(collectionModifier.Modify(set).GetEnumerator(), currentSource);
             }
             else
             {
@@ -93,36 +112,28 @@ namespace RandomChoiceMonad.RandomChoiceMonad
         }
 
 
-        private Tuple<bool, TItem> GetNext<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
+        private Tuple<bool, TItem> GetNext<TItem>(IEnumerator<TItem> enumerator, Func<T, IEnumerable<TItem>> f) where TItem : class
         {
-            var enumerator = (_itemsEnumerator as IEnumerator<TItem>);
-
             if (enumerator == null)
                 return Tuple.Create<bool, TItem>(false, null);
 
-            var ok = enumerator.MoveNext();
-
-            if (!ok)
+            if (enumerator.MoveNext())
             {
-                var newEnumerator = TryNextSource(f);
-                _itemsEnumerator = newEnumerator;
-                return GetNext(f);
-            }   
-
-            return Tuple.Create(ok, enumerator.Current);
+                return Tuple.Create(true, enumerator.Current);
+            }
+            else
+            {
+                var result = TryNextSource(f);
+                CurrentSource = result.CurrentSource;
+                
+                return GetNext(result.Enumerator, f);
+            }
         }
 
-        private IEnumerator<TItem> TryNextSource<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
+        private ResultPack<T, TItem> TryNextSource<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
         {
             var tuple = _toGetNextSource();
-
-            var isSucceeded = tuple.Item1;
-            if (!isSucceeded)
-                return null;
-
-            CurrentSource = tuple.Item2;
-
-            return Get(CurrentSource, f);
+            return  tuple.Item1 ? GetEnumerator(tuple.Item2, _collectionModifier, f) : null;
         }
     }
 }

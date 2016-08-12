@@ -47,17 +47,23 @@ namespace RandomChoiceMonad.RandomChoiceMonad
         {
             if (_toGetNextSource == null || CurrentSource == null)
                 return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null);
-            
-            dynamic named = CurrentSource;
+
+            _itemsEnumerator = Get(CurrentSource, f);
+
+            if (_itemsEnumerator == null) return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null);
+            return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, () => GetNext(f));
+        }
+
+        private IEnumerator<TItem> Get<TItem>(T currentSource, Func<T, IEnumerable<TItem>> f) where TItem : class
+        {
+            dynamic named = currentSource;
             Console.WriteLine("...{0}:{1}", typeof(T).Name, named.Name);
 
-            var set = f(CurrentSource);
-            
+            var set = f(currentSource);
+
             if (set != null && set.Any())
             {
-                _itemsEnumerator = _collectionModifier.Modify(set).GetEnumerator();
-
-                return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, () => GetNext(f));
+                return _collectionModifier.Modify(set).GetEnumerator();
             }
             else
             {
@@ -98,24 +104,25 @@ namespace RandomChoiceMonad.RandomChoiceMonad
 
             if (!ok)
             {
-                TryNextSource(f);
+                var newEnumerator = TryNextSource(f);
+                _itemsEnumerator = newEnumerator;
                 return GetNext(f);
             }   
 
             return Tuple.Create(ok, enumerator.Current);
         }
 
-        private IChoiceMonad<TItem> TryNextSource<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
+        private IEnumerator<TItem> TryNextSource<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
         {
             var tuple = _toGetNextSource();
 
             var isSucceeded = tuple.Item1;
             if (!isSucceeded)
-                return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null);
+                return null;
 
             CurrentSource = tuple.Item2;
 
-            return Get(f);
+            return Get(CurrentSource, f);
         }
     }
 }

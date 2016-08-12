@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCFServices", "WCFServices\WCFServices.csproj", "{8BF33A83-D1F5-46C9-87AA-7CC3E3B7A896}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "Contracts\Contracts.csproj", "{9941173E-B5EA-482F-A869-06FB396F93C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{A390CD68-19C9-439E-9022-1048A07BAF7A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ServerSide", "ServerSide", "{480DDF68-D56D-4DEF-ABCF-9DE3E6D4967A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ClientSide", "ClientSide", "{5BF29AD7-F399-4CCB-BD7F-7059EB71853B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Proxies", "Proxies\Proxies.csproj", "{80E15AF3-EC42-434D-A087-9F0EFB3CB775}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShipsClient", "ShipsClient\ShipsClient.csproj", "{A774BFEA-EF93-4277-A570-D252EED884C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServicesTests", "ServicesTests\ServicesTests.csproj", "{343FB9FA-4378-47BB-B8BC-2144FD257405}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8BF33A83-D1F5-46C9-87AA-7CC3E3B7A896}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BF33A83-D1F5-46C9-87AA-7CC3E3B7A896}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BF33A83-D1F5-46C9-87AA-7CC3E3B7A896}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BF33A83-D1F5-46C9-87AA-7CC3E3B7A896}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9941173E-B5EA-482F-A869-06FB396F93C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9941173E-B5EA-482F-A869-06FB396F93C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9941173E-B5EA-482F-A869-06FB396F93C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9941173E-B5EA-482F-A869-06FB396F93C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A390CD68-19C9-439E-9022-1048A07BAF7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A390CD68-19C9-439E-9022-1048A07BAF7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A390CD68-19C9-439E-9022-1048A07BAF7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A390CD68-19C9-439E-9022-1048A07BAF7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80E15AF3-EC42-434D-A087-9F0EFB3CB775}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80E15AF3-EC42-434D-A087-9F0EFB3CB775}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80E15AF3-EC42-434D-A087-9F0EFB3CB775}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80E15AF3-EC42-434D-A087-9F0EFB3CB775}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A774BFEA-EF93-4277-A570-D252EED884C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A774BFEA-EF93-4277-A570-D252EED884C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A774BFEA-EF93-4277-A570-D252EED884C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A774BFEA-EF93-4277-A570-D252EED884C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{343FB9FA-4378-47BB-B8BC-2144FD257405}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{343FB9FA-4378-47BB-B8BC-2144FD257405}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{343FB9FA-4378-47BB-B8BC-2144FD257405}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{343FB9FA-4378-47BB-B8BC-2144FD257405}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8BF33A83-D1F5-46C9-87AA-7CC3E3B7A896} = {480DDF68-D56D-4DEF-ABCF-9DE3E6D4967A}
+		{A390CD68-19C9-439E-9022-1048A07BAF7A} = {480DDF68-D56D-4DEF-ABCF-9DE3E6D4967A}
+		{80E15AF3-EC42-434D-A087-9F0EFB3CB775} = {5BF29AD7-F399-4CCB-BD7F-7059EB71853B}
+		{A774BFEA-EF93-4277-A570-D252EED884C3} = {5BF29AD7-F399-4CCB-BD7F-7059EB71853B}
+		{343FB9FA-4378-47BB-B8BC-2144FD257405} = {480DDF68-D56D-4DEF-ABCF-9DE3E6D4967A}
+	EndGlobalSection
+EndGlobal

@@ -97,6 +97,30 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             });
         }
 
+        private T CurrentSource
+        {
+            get
+            {
+                if (_toGetNextSource == null && _currentSource == null)
+                    return null;
+
+                if (_currentSource == null)
+                {
+                    var tuple = _toGetNextSource();
+                    var isSucceeded = tuple.Item1;
+                    _currentSource = tuple.Item2;
+
+                    if (_currentSource == null)
+                        return null;
+                }
+                return _currentSource;
+            }
+            set
+            {
+                _currentSource = value;
+            }
+        }
+
         private ResultPack<T, TItem> GetEnumerator<TItem>(
             T currentSource, 
             ICollectionModifier collectionModifier,
@@ -118,28 +142,6 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             }
         }
 
-        private T CurrentSource
-        {
-            get
-            {
-                if (_currentSource == null)
-                {
-                    var tuple = _toGetNextSource();
-                    var isSucceeded = tuple.Item1;
-                    _currentSource = tuple.Item2;
-
-                    if (_currentSource == null)
-                        return null;
-                }
-                return _currentSource;
-            }
-            set
-            {
-                _currentSource = value;
-            }
-        }
-
-
         private Tuple<bool, TItem, T> GetNext<TItem>(
             IEnumerator<TItem> enumerator,
             Func<T, IEnumerable<TItem>> f,
@@ -153,13 +155,20 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             Tuple<bool, TItem> result = null;
             while (result == null)
             {
-                if (currentResultPack.Enumerator.MoveNext())
+                if (currentResultPack.Enumerator == null)
                 {
-                    result = Tuple.Create(true, currentResultPack.Enumerator.Current);
+                    result = Tuple.Create<bool, TItem>(false, null);
                 }
                 else
                 {
-                    currentResultPack = TryNextSource(f);
+                    if (currentResultPack.Enumerator.MoveNext())
+                    {
+                        result = Tuple.Create(true, currentResultPack.Enumerator.Current);
+                    }
+                    else
+                    {
+                        currentResultPack = TryNextSource(f);
+                    }
                 }
             }
 
@@ -169,7 +178,7 @@ namespace RandomChoiceMonad.RandomChoiceMonad
         private ResultPack<T, TItem> TryNextSource<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
         {
             var tuple = _toGetNextSource();
-            return  tuple.Item1 ? GetEnumerator(tuple.Item2, _collectionModifier, f) : null;
+            return  tuple.Item1 ? GetEnumerator(tuple.Item2, _collectionModifier, f) : new ResultPack<T, TItem>(null, tuple.Item2);
         }
     }
 }

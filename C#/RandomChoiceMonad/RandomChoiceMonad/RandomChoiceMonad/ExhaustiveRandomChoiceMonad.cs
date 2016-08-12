@@ -6,6 +6,28 @@ using RandomChoiceMonad.Model;
 
 namespace RandomChoiceMonad.RandomChoiceMonad
 {
+    class StateMonad<TValue, TState>
+    {
+        public StateMonad(TValue value, TState state)
+        {
+            Value = value;
+            State = state;
+        }
+
+        public TValue Value { get; private set; }
+        public TState State { get; private set; }
+
+        public StateMonad<TNew, TState> Map<TNew>(Func<TValue, TNew> f)
+        {
+            return new StateMonad<TNew, TState>(f(Value), State);
+        }
+
+        public StateMonad<TNew, TState> Bind<TNew>(Func<TValue, StateMonad<TNew, TState>> f)
+        {
+            return f(Value);
+        }
+    }
+
     public static class ExhaustiveRandomChoiceMonad
     {
         public static IChoiceMonad<T> Return<T>(T value, ICollectionModifier collectionModifier) where T : class
@@ -117,17 +139,22 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             if (enumerator == null)
                 return Tuple.Create<bool, TItem>(false, null);
 
-            if (enumerator.MoveNext())
+            var currentResultPack = new ResultPack<T, TItem>(enumerator, CurrentSource);
+            Tuple<bool, TItem> result = null;
+            while (result == null)
             {
-                return Tuple.Create(true, enumerator.Current);
+                if (currentResultPack.Enumerator.MoveNext())
+                {
+                    result = Tuple.Create(true, currentResultPack.Enumerator.Current);
+                }
+                else
+                {
+                    currentResultPack = TryNextSource(f);
+                }
             }
-            else
-            {
-                var result = TryNextSource(f);
-                CurrentSource = result.CurrentSource;
-                
-                return GetNext(result.Enumerator, f);
-            }
+
+            CurrentSource = currentResultPack.CurrentSource;
+            return result;
         }
 
         private ResultPack<T, TItem> TryNextSource<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class

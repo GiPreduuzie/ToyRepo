@@ -88,7 +88,13 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             var itemsEnumerator = resultPack.Enumerator;
 
             if (itemsEnumerator == null) return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null);
-            return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, () => GetNext(itemsEnumerator, f));
+            return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, () =>
+            {
+                var result = GetNext(itemsEnumerator, f, CurrentSource);
+                CurrentSource = result.Item3;
+
+                return Tuple.Create(result.Item1, result.Item2);
+            });
         }
 
         private ResultPack<T, TItem> GetEnumerator<TItem>(
@@ -134,12 +140,16 @@ namespace RandomChoiceMonad.RandomChoiceMonad
         }
 
 
-        private Tuple<bool, TItem> GetNext<TItem>(IEnumerator<TItem> enumerator, Func<T, IEnumerable<TItem>> f) where TItem : class
+        private Tuple<bool, TItem, T> GetNext<TItem>(
+            IEnumerator<TItem> enumerator,
+            Func<T, IEnumerable<TItem>> f,
+            T currentSource)
+            where TItem : class
         {
             if (enumerator == null)
-                return Tuple.Create<bool, TItem>(false, null);
+                return Tuple.Create<bool, TItem, T>(false, null, currentSource);
 
-            var currentResultPack = new ResultPack<T, TItem>(enumerator, CurrentSource);
+            var currentResultPack = new ResultPack<T, TItem>(enumerator, currentSource);
             Tuple<bool, TItem> result = null;
             while (result == null)
             {
@@ -153,8 +163,7 @@ namespace RandomChoiceMonad.RandomChoiceMonad
                 }
             }
 
-            CurrentSource = currentResultPack.CurrentSource;
-            return result;
+            return Tuple.Create(result.Item1, result.Item2, currentResultPack.CurrentSource);
         }
 
         private ResultPack<T, TItem> TryNextSource<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class

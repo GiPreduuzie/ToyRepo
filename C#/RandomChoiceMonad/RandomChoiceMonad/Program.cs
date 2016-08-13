@@ -1,6 +1,7 @@
 ﻿using RandomChoiceMonad.Model;
 using RandomChoiceMonad.RandomChoiceMonad;
 using System;
+using System.Text;
 
 namespace RandomChoiceMonad
 {
@@ -20,8 +21,14 @@ namespace RandomChoiceMonad
                     Console.ForegroundColor = itWas;
 
 
+                    var logger = new StringBuilder();
+                    var matrixM = ExhaustiveRandomChoiceMonad.Return(
+                        input, 
+                        CollectionModifiers.CollectionModifiers.CreateRandomCollectionModifier(random),
+                        logger);
 
-                    var matrixM = ExhaustiveRandomChoiceMonad.Return(input, CollectionModifiers.CollectionModifiers.CreateRandomCollectionModifier(random));
+                    Console.WriteLine(logger.ToString());
+
                     var surveyM = matrixM.Get(x => x.Surveys);
                     var questionM = surveyM.Get(x => x.Questions);
 
@@ -34,15 +41,22 @@ namespace RandomChoiceMonad
                     var question = questionM.Resolve();
                     var field = fieldM.Resolve();
 
-                    Console.WriteLine("matrix: " + (matrix?.Name ?? "< nothing >"));
-                    Console.WriteLine("survey: " + (survey?.Name ?? "< nothing >"));
-                    Console.WriteLine("question: " + (question?.Name ?? "< nothing >"));
-
-                    Console.WriteLine("field: " + (field?.Name ?? "< nothing >"));
-
-                    Console.WriteLine("(fixed question: " + (questionFixed?.Name ?? "< nothing >") + ")");
-                    Console.WriteLine();
+                    Output(matrix);
+                    Output(survey);
+                    Output(question);
+                    Output(field);
                 }
+            }
+        }
+
+        static void Output<T>(T obj)
+        {
+            if (obj == null)
+                Console.WriteLine("NULL");
+            else
+            {
+                dynamic named = obj;
+                Console.WriteLine("{0}: {1}", typeof(T).Name, named.Name ?? "<nothing>");
             }
         }
     }

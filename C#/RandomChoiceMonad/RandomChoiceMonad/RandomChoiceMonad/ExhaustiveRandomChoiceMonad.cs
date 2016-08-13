@@ -2,7 +2,7 @@ using RandomChoiceMonad.CollectionModifiers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using RandomChoiceMonad.Model;
+using System.Text;
 
 namespace RandomChoiceMonad.RandomChoiceMonad
 {
@@ -30,7 +30,10 @@ namespace RandomChoiceMonad.RandomChoiceMonad
 
     public static class ExhaustiveRandomChoiceMonad
     {
-        public static IChoiceMonad<T> Return<T>(T value, ICollectionModifier collectionModifier) where T : class
+        public static IChoiceMonad<T> Return<T>(
+            T value,
+            ICollectionModifier collectionModifier,
+            StringBuilder logger) where T : class
         {
             bool tried = false;
             return new ExhaustiveRandomChoiceMonad<T>(collectionModifier, () => {
@@ -43,7 +46,8 @@ namespace RandomChoiceMonad.RandomChoiceMonad
                     tried = true;
                     return Tuple.Create<bool, T>(true, value);
                 }
-            });
+            },
+            logger);
         }
     }
 
@@ -65,12 +69,23 @@ namespace RandomChoiceMonad.RandomChoiceMonad
     {
         private readonly Func<Tuple<bool, T>> _toGetNextSource;
         private readonly ICollectionModifier _collectionModifier;
-        private T _currentSource; 
+        private T _currentSource;
+        private readonly StringBuilder _logger;
 
-        public ExhaustiveRandomChoiceMonad(ICollectionModifier collectionModifier, Func<Tuple<bool, T>> toGetNextSource)
+        public ExhaustiveRandomChoiceMonad(
+            ICollectionModifier collectionModifier,
+            Func<Tuple<bool, T>> toGetNextSource,
+            StringBuilder logger)
         {
+            if (collectionModifier == null)
+                throw new ArgumentNullException(nameof(collectionModifier));
+
+            if (toGetNextSource == null)
+                throw new ArgumentNullException(nameof(toGetNextSource));
+
             _toGetNextSource = toGetNextSource;
             _collectionModifier = collectionModifier;
+            _logger = logger;
         }
 
         public T Resolve()
@@ -81,29 +96,27 @@ namespace RandomChoiceMonad.RandomChoiceMonad
         public IChoiceMonad<TItem> Get<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
         {
             if (_toGetNextSource == null || CurrentSource == null)
-                return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null);
+                return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null, _logger);
 
             var resultPack = GetEnumerator(CurrentSource, _collectionModifier, f);
             CurrentSource = resultPack.CurrentSource;
             var itemsEnumerator = resultPack.Enumerator;
-
-            if (itemsEnumerator == null) return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null);
-            return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, () =>
+            
+            return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, 
+                () =>
             {
                 var result = GetNext(itemsEnumerator, f, CurrentSource);
                 CurrentSource = result.Item3;
 
                 return Tuple.Create(result.Item1, result.Item2);
-            });
+            },
+            _logger);
         }
 
         private T CurrentSource
         {
             get
             {
-                if (_toGetNextSource == null && _currentSource == null)
-                    return null;
-
                 if (_currentSource == null)
                 {
                     var tuple = _toGetNextSource();
@@ -128,7 +141,7 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             where TItem : class
         {
             dynamic named = currentSource;
-            Console.WriteLine("...{0}:{1}", typeof(T).Name, named.Name);
+            _logger.AppendLine(string.Format("...{0}:{1}", typeof(T).Name, named.Name));
 
             var set = f(currentSource);
 
@@ -178,7 +191,9 @@ namespace RandomChoiceMonad.RandomChoiceMonad
         private ResultPack<T, TItem> TryNextSource<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
         {
             var tuple = _toGetNextSource();
-            return  tuple.Item1 ? GetEnumerator(tuple.Item2, _collectionModifier, f) : new ResultPack<T, TItem>(null, tuple.Item2);
+            return  tuple.Item1 
+                ? GetEnumerator(tuple.Item2, _collectionModifier, f) 
+                : new ResultPack<T, TItem>(null, tuple.Item2);
         }
     }
 }

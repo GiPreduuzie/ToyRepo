@@ -15,7 +15,7 @@
                                 new Question { Name = "1*", Fields = new Field[0]} } },
                         new Survey { Name = "3",
                             Questions = new [] {
-                                new Question { Name = "1", Fields = new[] { new Field {Name = "1" }, new Field { Name = "1" } }},
+                                new Question { Name = "1", Fields = new[] { new Field {Name = "1" }, new Field { Name = "2" } }},
                                 new Question { Name = "2", Fields = new Field[0]} } },
                         new Survey { Name = "4", Questions = new Question[0] }
                 } },

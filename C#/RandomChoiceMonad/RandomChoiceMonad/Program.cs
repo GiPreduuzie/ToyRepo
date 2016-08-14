@@ -20,7 +20,6 @@ namespace RandomChoiceMonad
                     Console.WriteLine($"iteration {i}");
                     Console.ForegroundColor = itWas;
 
-
                     var logger = new StringBuilder();
                     var matrixM = ExhaustiveRandomChoiceMonad.Return(
                         input, 

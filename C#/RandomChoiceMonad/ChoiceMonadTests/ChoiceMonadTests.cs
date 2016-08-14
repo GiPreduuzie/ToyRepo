@@ -49,13 +49,15 @@ namespace ChoiceMonadTests
         [TestMethod]
         public void SecondLevelAtRightEnd()
         {
-            var input = new Matrix { Name = "A", Surveys = new[] { null, new Survey { Name = "C"} } };
+            var input = new Matrix { Name = "A", Surveys = new[] { null, new Survey { Name = "C", Questions = new[] { new Question { Name = "C1" } } } } };
 
             var matrixM = MakeMonad(input);
             var surveyM = matrixM.Get(x => x.Surveys);
+            var questionM = surveyM.Get(x => x.Questions);
 
             Assert.AreEqual("A", matrixM.Resolve().Name);
             Assert.AreEqual("C", surveyM.Resolve().Name);
+            Assert.AreEqual("C1", questionM.Resolve().Name);
         }
 
         [TestMethod]
@@ -85,13 +87,13 @@ namespace ChoiceMonadTests
             {
                 Name = "1",
                 Surveys = new[] {
-                        new Survey { Name = "1",
+                        new Survey { Name = "11",
                             Questions = new [] {
-                                new Question { Name = "1*", Fields = new Field[0]} } },
-                        new Survey { Name = "2",
+                                new Question { Name = "111", Fields = new Field[0]} } },
+                        new Survey { Name = "12",
                             Questions = new [] {
-                                new Question { Name = "1", Fields = new Field[0]},
-                                new Question { Name = "2", Fields = new[] { new Field {Name = "1" }} } }
+                                new Question { Name = "121", Fields = new Field[0]},
+                                new Question { Name = "122", Fields = new[] { new Field {Name = "1221" }} } }
 
                 }
             }
@@ -100,12 +102,17 @@ namespace ChoiceMonadTests
             var matrixM = MakeMonad(input);
             var surveyM = matrixM.Get(x => x.Surveys);
             var questionM = surveyM.Get(x => x.Questions);
-            var fieldM = questionM.Get(x => x.Fields);
 
             Assert.AreEqual("1", matrixM.Resolve().Name);
-            Assert.AreEqual("2", surveyM.Resolve().Name);
-            Assert.AreEqual("2", questionM.Resolve().Name);
-            Assert.AreEqual("1", fieldM.Resolve().Name);
+            Assert.AreEqual("11", surveyM.Resolve().Name);
+            Assert.AreEqual("111", questionM.Resolve().Name);
+
+            var fieldM = questionM.Get(x => x.Fields);
+            
+            Assert.AreEqual("1", matrixM.Resolve().Name);
+            Assert.AreEqual("12", surveyM.Resolve().Name);
+            Assert.AreEqual("122", questionM.Resolve().Name);
+            Assert.AreEqual("1221", fieldM.Resolve().Name);
         }
 
         [TestMethod]

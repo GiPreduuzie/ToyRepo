@@ -95,18 +95,22 @@ namespace RandomChoiceMonad.RandomChoiceMonad
 
         public IChoiceMonad<TItem> Get<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
         {
+            _logger.AppendLine();
+            _logger.AppendLine();
+            Log(CurrentSource, "Main 'get' is called");
+
             if (_toGetNextSource == null || CurrentSource == null)
                 return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null, _logger);
 
             var resultPack = GetEnumerator(CurrentSource, _collectionModifier, f);
             CurrentSource = resultPack.CurrentSource;
-            var itemsEnumerator = resultPack.Enumerator;
             
             return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, 
                 () =>
             {
-                var result = GetNext(itemsEnumerator, f, CurrentSource);
-                CurrentSource = result.Item3;
+                var result = GetNext(resultPack, f);
+                resultPack = result.Item3;
+                CurrentSource = resultPack.CurrentSource;
 
                 return Tuple.Create(result.Item1, result.Item2);
             },
@@ -140,31 +144,32 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             Func<T, IEnumerable<TItem>> f) 
             where TItem : class
         {
-            dynamic named = currentSource;
-            _logger.AppendLine(string.Format("...{0}:{1}", typeof(T).Name, named.Name));
-
             var set = f(currentSource);
 
+            Log(currentSource, "getting enumerator...");
             if (set != null && set.Any())
             {
+                Log(currentSource, "set is found, getting enumerator...");
+                Log(set.First(), "<- got enumerator");
                 return new ResultPack<T, TItem>(collectionModifier.Modify(set).GetEnumerator(), currentSource);
             }
             else
             {
+                Log(currentSource, "no set found, trying next source");
                 return TryNextSource(f);
             }
         }
 
-        private Tuple<bool, TItem, T> GetNext<TItem>(
-            IEnumerator<TItem> enumerator,
-            Func<T, IEnumerable<TItem>> f,
-            T currentSource)
+        private Tuple<bool, TItem, ResultPack<T, TItem>> GetNext<TItem>(
+            ResultPack<T, TItem> currectBag,
+            Func<T, IEnumerable<TItem>> f)
             where TItem : class
         {
-            if (enumerator == null)
-                return Tuple.Create<bool, TItem, T>(false, null, currentSource);
+            Log(currectBag.CurrentSource, "In 'get next'");
+            if (currectBag.Enumerator == null)
+                return Tuple.Create<bool, TItem, ResultPack<T, TItem>>(false, null, currectBag);
 
-            var currentResultPack = new ResultPack<T, TItem>(enumerator, currentSource);
+            var currentResultPack = currectBag;
             Tuple<bool, TItem> result = null;
             while (result == null)
             {
@@ -174,18 +179,21 @@ namespace RandomChoiceMonad.RandomChoiceMonad
                 }
                 else
                 {
+                    Log(currentResultPack.CurrentSource, "Try get sibling...");
                     if (currentResultPack.Enumerator.MoveNext())
                     {
+                        Log(currentResultPack.CurrentSource, "Got!");
                         result = Tuple.Create(true, currentResultPack.Enumerator.Current);
                     }
                     else
                     {
+                        Log(currentResultPack.CurrentSource, "Try to get next source");
                         currentResultPack = TryNextSource(f);
                     }
                 }
             }
 
-            return Tuple.Create(result.Item1, result.Item2, currentResultPack.CurrentSource);
+            return Tuple.Create(result.Item1, result.Item2, currentResultPack);
         }
 
         private ResultPack<T, TItem> TryNextSource<TItem>(Func<T, IEnumerable<TItem>> f) where TItem : class
@@ -194,6 +202,21 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             return  tuple.Item1 
                 ? GetEnumerator(tuple.Item2, _collectionModifier, f) 
                 : new ResultPack<T, TItem>(null, tuple.Item2);
+        }
+
+        private void Log<T>(T value, string message)
+        {
+            if (value == null)
+            {
+                _logger.AppendLine("source is null : " + message);
+                return;
+            }
+
+            dynamic temp = value;
+            _logger.AppendLine(string.Format("{0}.{1}:\t {2}",
+                typeof(T).Name,
+                temp?.Name ?? "<null>",
+                message));
         }
     }
 }

@@ -99,8 +99,8 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             _logger.AppendLine();
             Log(CurrentSource, "Main 'get' is called");
 
-            if (_toGetNextSource == null || CurrentSource == null)
-                return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, null, _logger);
+            if (CurrentSource == null)
+                return new ExhaustiveRandomChoiceMonad<TItem>(_collectionModifier, () => Tuple.Create<bool, TItem>(false, null), _logger);
 
             var resultPack = GetEnumerator(CurrentSource, _collectionModifier, f);
             CurrentSource = resultPack.CurrentSource;

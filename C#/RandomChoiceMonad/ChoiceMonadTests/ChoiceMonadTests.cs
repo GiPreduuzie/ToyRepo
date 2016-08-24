@@ -81,6 +81,27 @@ namespace ChoiceMonadTests
         }
 
         [TestMethod]
+        public void ThirdLevelIsNull()
+        {
+            var input = new Matrix
+            {
+                Name = "A",
+                Surveys = new[] {
+                    new Survey { Name = "B" },
+                    new Survey { Name = "C" } } };
+
+            var matrixM = MakeMonad(input);
+            var surveyM = matrixM.Get(x => x.Surveys);
+            var questionM = surveyM.Get(x => x.Questions);
+            var fieldM = questionM.Get(x => x.Fields);
+
+            Assert.AreEqual(null, matrixM.Resolve());
+            Assert.AreEqual(null, surveyM.Resolve());
+            Assert.AreEqual(null, questionM.Resolve());
+            Assert.AreEqual(null, fieldM.Resolve());
+        }
+
+        [TestMethod]
         public void FailingCase()
         {
             var input = new Matrix

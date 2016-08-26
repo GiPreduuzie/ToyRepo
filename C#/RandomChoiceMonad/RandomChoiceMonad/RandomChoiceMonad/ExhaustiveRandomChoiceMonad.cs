@@ -144,7 +144,7 @@ namespace RandomChoiceMonad.RandomChoiceMonad
             Func<T, IEnumerable<TItem>> f) 
             where TItem : class
         {
-            var set = f(currentSource);
+            var set = f(currentSource)?.Where(x => x != null);
 
             Log(currentSource, "getting enumerator...");
             if (set != null && set.Any())

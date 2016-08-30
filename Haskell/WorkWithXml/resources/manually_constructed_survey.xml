@@ -1,0 +1,84 @@
+<!-- "Questionnaire", "Routing", "Nodes" -->
+<Project>
+    <Questionnaire>
+        <Routing>
+            <Nodes>
+            
+                <Single EntityId="1" AutoCheckOther="true">
+                    <Name>q1</Name>
+                    <FormTexts />
+                    <TranslationStatuses />
+                    <QuestionTriggers />
+                    <HasWeights>false</HasWeights>
+                    <SingleAnswers EntityId="2_SingleAnswers">
+                        <Answer Precode="1" StyleName="" BackgroundColor=""><Texts><Text Language="9">1</Text></Texts><TextsRight /></Answer>
+                        <Answer Precode="2" StyleName="" BackgroundColor=""><Texts><Text Language="9">2</Text></Texts><TextsRight /></Answer>
+                        <Answer Precode="3" StyleName="" BackgroundColor=""><Texts><Text Language="9">3</Text></Texts><TextsRight /></Answer>
+                    </SingleAnswers>
+                </Single>
+                
+                <Single EntityId="2" AutoCheckOther="true">
+                    <Name>q2</Name>
+                    <FormTexts />
+                    <TranslationStatuses />
+                    <QuestionTriggers />
+                    <HasWeights>false</HasWeights>
+                    <SingleAnswers EntityId="2_SingleAnswers">
+                        <Answer Precode="1" StyleName="" BackgroundColor=""><Texts><Text Language="9">1</Text></Texts><TextsRight /></Answer>
+                        <Answer Precode="2" StyleName="" BackgroundColor=""><Texts><Text Language="9">2</Text></Texts><TextsRight /></Answer>
+                        <Answer Precode="3" StyleName="" BackgroundColor=""><Texts><Text Language="9">3</Text></Texts><TextsRight /></Answer>
+                    </SingleAnswers>
+                </Single>
+                
+                <Multi EntityId="3" AutoCheckOther="true">
+                    <Name>q3</Name>
+                    <FormTexts />
+                    <TranslationStatuses />
+                    <QuestionTriggers />
+                    <HasWeights>false</HasWeights>
+                    <MultiAnswers EntityId="2_MultiAnswers">
+                        <Answer Precode="1" StyleName="" BackgroundColor=""><Texts><Text Language="9">1</Text></Texts><TextsRight /></Answer>
+                        <Answer Precode="2" StyleName="" BackgroundColor=""><Texts><Text Language="9">2</Text></Texts><TextsRight /></Answer>
+                        <Answer Precode="3" StyleName="" BackgroundColor=""><Texts><Text Language="9">3</Text></Texts><TextsRight /></Answer>
+                    </MultiAnswers>
+                </Multi>
+                
+                <Multi EntityId="4" AutoCheckOther="true">
+                    <Name>q4</Name>
+                    <FormTexts />
+                    <TranslationStatuses />
+                    <QuestionTriggers />
+                    <HasWeights>false</HasWeights>
+                    <MultiAnswers EntityId="2_MultiAnswers">
+                        <Answer Precode="1" StyleName="" BackgroundColor=""><Texts><Text Language="9">1</Text></Texts><TextsRight /></Answer>
+                        <Answer Precode="2" StyleName="" BackgroundColor=""><Texts><Text Language="9">2</Text></Texts><TextsRight /></Answer>
+                        <Answer Precode="3" StyleName="" BackgroundColor=""><Texts><Text Language="9">3</Text></Texts><TextsRight /></Answer>
+                    </MultiAnswers>
+                </Multi>
+                
+                <Open 
+                    EntityId="5"
+                    NotPerformDataCleaningOnMasking="false"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                    <Name>q5</Name>
+                    <FormTexts />
+                    <TranslationStatuses />
+                    <QuestionTriggers />
+                </Open>
+                
+                <Open 
+                    EntityId="6"
+                    NotPerformDataCleaningOnMasking="false"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                    <Name>q6</Name>
+                    <FormTexts />
+                    <TranslationStatuses />
+                    <QuestionTriggers />
+                </Open>
+                
+            </Nodes>
+        </Routing>
+    </Questionnaire>
+</Project>

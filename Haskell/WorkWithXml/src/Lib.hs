@@ -10,8 +10,6 @@ import Data.Traversable
 --import XmlParsec
 
 
-
-
 --import Text.XML.HXT.Parser.XmlParsec
 -- deep (hasName tag) >>> 
 
@@ -72,12 +70,14 @@ constructSingle xmlTree = constructQuestionWithAnswers Single "Single" xmlTree
 constructMulti  xmlTree = constructQuestionWithAnswers Multi  "Multi"  xmlTree
 
 
+--process x = show $ runLA (xread ) x
+
 process x = print . traverse id  $ runLA (xread >>> selector3 ) x
     where print (Just value) = show value
           print  Nothing     = "Sorry, some errors"
 
 
---selector3 :: LA (NTree XNode) XmlTree
+selector3 :: LA (NTree XNode) (Maybe Node)
 selector3 = deep ( chain  ["Questionnaire", "Routing", "Nodes"] )
             >>> deep ( (hasName "Single" >>> arr constructSingle )
                          <+> 
@@ -90,7 +90,8 @@ selector3 = deep ( chain  ["Questionnaire", "Routing", "Nodes"] )
                                 -- getChildren >>> getText ))
 
 --chain "Questionnaire" ["Routing"] )
---selector1 = deep ( chain "Questionnaire" ["Routing", "Nodes"] )
+selector1 :: LA (NTree XNode) (Maybe Node)
+selector1 = deep ( hasName "Project" ) >>> arr constructSingle 
 
 
 selector2 :: LA (Trees.NTree XNode) String

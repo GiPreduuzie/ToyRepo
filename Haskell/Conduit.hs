@@ -1,10 +1,3 @@
-module Lib
-    ( source
-    , conduit'
-    , sink'
-    ) where
-
-
 import Data.Conduit
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
@@ -46,8 +39,8 @@ conduit' = do value <- await
                   Just x  -> do 
                                 yield $ show x
                                 conduit'
-                                
-sink' :: Sink String Maybe ()                           
+
+sink' :: Sink String IO ()                                         
 sink' = do 
          value <- await
          case value of 
@@ -62,3 +55,7 @@ sink' = do
         -- Nothing    -> return ()
         -- Just value -> liftIO $ putStrLn value
                       -- sink'
+            
+
+
+main = do putStrLn $ show ( source $$ conduit' =$ sink')

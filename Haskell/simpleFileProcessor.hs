@@ -1,3 +1,6 @@
+-- here I copy filels from every folder in 'root'
+-- to 'root' with special name adjustings
+
 import System.Directory
 import Control.Monad
 

@@ -4,6 +4,9 @@ import Data.List
 --"*ad" -> a.*d 
 
 
+data Line a = Line [a] a
+data Matrix a = MatrixLayer a (Line a) (Line a) 
+
 
 -- addCost    x = 1
 -- deleteCost x = 1
@@ -21,23 +24,24 @@ oneWeight xLetter yLetter b c a = min (min (a + (addCost xLetter)) (c + (deleteC
                                   where substitute = b + if xLetter == yLetter then 0 else 1
 
                                   
-weightOneLine xLetter yLetter xLetters xBound xArray cross =
+weightOneLine xLetter yLetter xLetters (Line xArray xBound) cross =
     let oneWeightLettered = oneWeight yLetter
         xPairs = [(b,c) | (b, c) <- zip (xBound : xArray) (xArray ++ [cross])] 
         xTriples = [(a, b, c) | (a, (b, c)) <- zip (xLetters ++ [xLetter]) xPairs] 
         toWeights = [oneWeightLettered a b c | (a, b, c) <- xTriples] 
-    in scanl (\accum f -> f accum) (xBound + 1) toWeights
+        line = scanl (flip ($)) (xBound + 1) toWeights
+    in (Line (tail . reverse . tail . reverse $ line) (head line), head . reverse $ line)
     
 
+attachToLine :: Line a -> a -> Line a
+attachToLine (Line line bound) x = Line (line ++ [x]) bound 
                                   
 --weight from to =
-block xLetter yLetter xLetters yLetters xBound yBound xArray yArray cross =
-    let xLine  = weightOneLine xLetter yLetter xLetters xBound xArray cross
-        yLine  = weightOneLine yLetter xLetter yLetters yBound yArray cross
-        xCross = head . reverse $ xLine
-        yCross = head . reverse $ xLine
+block xLetter yLetter xLetters yLetters (MatrixLayer cross lineX lineY) =
+    let (xLine, xCross)  = weightOneLine xLetter yLetter xLetters lineX cross
+        (yLine, yCross)  = weightOneLine yLetter xLetter yLetters lineY cross
         cross' = oneWeight xLetter yLetter cross yCross xCross
-    in (head xLine, tail xLine, cross', head yLine, tail yLine)
+    in (MatrixLayer cross' (attachToLine xLine xCross) (attachToLine yLine yCross))
     
     --in xTriples
         -- toWeights = [oneWeight xLetter b c | (xLetter, (b, c)) <- zip xPairs xLetters] 
@@ -51,19 +55,13 @@ longZip left right =
         longZip' (x:xs) []     = (Just x,    Nothing) : longZip' xs []
         longZip' []     []     = []
     in longZip' left right
+
+
     
-do' left right =
-    let zipped = longZip (left) (right)
-        
-        step (xLetter, yLetter) (xLetters, yLetters, xBound, xLine, cross, yBound, yLine) =
-           let (xBound', xLine', cross', yBound', yLine') = block xLetter yLetter xLetters yLetters xBound yBound xLine yLine cross
-           in (xLetters ++ [xLetter], yLetters ++ [yLetter], xBound', xLine', cross', yBound', yLine')
-        
-        do'' (pair:pairs) accum = do'' pairs accum' where accum' = step pair accum
-        do'' [] accum = accum
-        
-        --result = do'' zipped ([Just ' '], [Just ' '], 1, [], 0, 1, [])
-        (_, _, _, _, result, _, _) = do'' zipped ([Just ' '], [Just ' '], 1, [], 0, 1, [])
+do1 left right =
+    let zipped = longZip left right
+        step (xLetters, yLetters, matrix) (xLetter, yLetter) = (xLetters ++ [xLetter], yLetters ++ [yLetter], block xLetter yLetter xLetters yLetters matrix)
+        (_, _,(MatrixLayer result _ _)) =  foldl step ([Just ' '], [Just ' '], (MatrixLayer 0 (Line [] 1) (Line [] 1))) zipped
     in result
     
 --test = block 'e' 'e' "ar" "dag" 3 3 [2,2] [3,3] 3
@@ -71,8 +69,8 @@ do' left right =
 fromWord = "dagestan"
 toWord = "arestant"
 
-test1 = do' fromWord toWord -- 8
-test3 = do' "" ""           -- 0
+test1 = do1 fromWord toWord -- 8
+test3 = do1 "" ""           -- 0
 
 
 test4 list =
@@ -80,7 +78,7 @@ test4 list =
               x <- list
               y <- list
               
-              return (x, y, (do' x y))
+              return (x, y, (do1 x y))
  in filter (\ (_, _, x) -> x /= 0 &&  x < 5 ) list' 
  
  

@@ -25,29 +25,23 @@ oneWeight xLetter yLetter b c a = min (min (a + (addCost xLetter)) (c + (deleteC
 
                                   
 weightOneLine xLetter yLetter xLetters (Line xArray xBound) cross =
-    let oneWeightLettered = oneWeight yLetter
-        xPairs = [(b,c) | (b, c) <- zip (xBound : xArray) (xArray ++ [cross])] 
-        xTriples = [(a, b, c) | (a, (b, c)) <- zip (xLetters ++ [xLetter]) xPairs] 
-        toWeights = [oneWeightLettered a b c | (a, b, c) <- xTriples] 
+    let oneWeightLettered (xLetter, xShifted, x) = oneWeight yLetter xLetter xShifted x
+        toWeights = map oneWeightLettered $ zip3 (xLetters ++ [xLetter]) (xBound : xArray) (xArray ++ [cross])
         line = scanl (flip ($)) (xBound + 1) toWeights
-    in (Line (tail . reverse . tail . reverse $ line) (head line), head . reverse $ line)
-    
+    in (Line (tail . reversedTail $ line) (head line), last line)
 
-attachToLine :: Line a -> a -> Line a
+reversedTail [] = undefined
+reversedTail xs = take ((length xs) - 1) xs
+
 attachToLine (Line line bound) x = Line (line ++ [x]) bound 
                                   
 --weight from to =
-block xLetter yLetter xLetters yLetters (MatrixLayer cross lineX lineY) =
+block (xLetters, yLetters, (MatrixLayer cross lineX lineY)) (xLetter, yLetter) =
     let (xLine, xCross)  = weightOneLine xLetter yLetter xLetters lineX cross
         (yLine, yCross)  = weightOneLine yLetter xLetter yLetters lineY cross
         cross' = oneWeight xLetter yLetter cross yCross xCross
-    in (MatrixLayer cross' (attachToLine xLine xCross) (attachToLine yLine yCross))
-    
-    --in xTriples
-        -- toWeights = [oneWeight xLetter b c | (xLetter, (b, c)) <- zip xPairs xLetters] 
-    -- in scanl (\x accum -> x accum) (xLetter + 1) toWeights
-    --zip xLetter xArray
-    
+    in (xLetters ++ [xLetter], yLetters ++ [yLetter], (MatrixLayer cross' (attachToLine xLine xCross) (attachToLine yLine yCross)))
+        
 
 longZip left right =
     let longZip' (x:xs) (y:ys) = (Just x,    Just y)  : longZip' xs ys
@@ -60,8 +54,7 @@ longZip left right =
     
 do1 left right =
     let zipped = longZip left right
-        step (xLetters, yLetters, matrix) (xLetter, yLetter) = (xLetters ++ [xLetter], yLetters ++ [yLetter], block xLetter yLetter xLetters yLetters matrix)
-        (_, _,(MatrixLayer result _ _)) =  foldl step ([Just ' '], [Just ' '], (MatrixLayer 0 (Line [] 1) (Line [] 1))) zipped
+        (_, _,(MatrixLayer result _ _)) = foldl block ([Just ' '], [Just ' '], (MatrixLayer 0 (Line [] 1) (Line [] 1))) zipped
     in result
     
 --test = block 'e' 'e' "ar" "dag" 3 3 [2,2] [3,3] 3

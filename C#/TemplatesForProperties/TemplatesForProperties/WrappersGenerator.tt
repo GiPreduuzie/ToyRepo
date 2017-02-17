@@ -1,0 +1,48 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="C:\Dev\ToyRepo\C#\TemplatesForProperties\TemplatesForProperties\bin\Release\TemplatesForProperties.exe" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="TemplatesForProperties" #>
+<#@ output extension=".cs" #>
+
+<# var type = typeof(TemplatesForProperties.MyClass); #>
+<# var className = type.Name + "Wrapper"; #>
+
+using System;
+using TemplatesForProperties;
+
+namespace Wrapped{
+
+public class MyProperty<T>
+{
+    T _embedded;
+
+    public MyProperty(Func<T> get, Action<T> set)
+	{
+	    Set = set;
+		Get = get;
+	}
+
+    public Action<T> Set { get; }
+	public Func<T> Get { get; }
+}
+
+public class <#= className #>
+{
+	<#= type.Name #> _embedded;
+
+    public <#= className #>(<#= type.Name #> embedded)
+	{
+	    _embedded = embedded;
+	}
+
+<# foreach(var property in typeof(TemplatesForProperties.MyClass).GetProperties())
+{ #>  
+   public MyProperty<<#= property.PropertyType #>> <#= property.Name #> =>
+       new MyProperty<<#= property.PropertyType #>>(() => _embedded.<#= property.Name #>, v => _embedded.<#= property.Name #> = v );
+<# } #>  
+
+}
+}

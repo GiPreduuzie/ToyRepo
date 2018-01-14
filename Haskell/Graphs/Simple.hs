@@ -11,7 +11,7 @@ type WorkingPoints n = Map.Map PointId (n, [String])
 
 min_by :: Ord b => (a -> b) -> [a] -> Either String a
 min_by f []     = Left "Empty list, could not take min"
-min_by f (x:xs) = Right $ foldl (\ a b -> if f a > f b then a else b) x xs
+min_by f (x:xs) = Right $ foldl (\ a b -> if f a < f b then a else b) x xs
 
 make_string separator []      = []
 make_string separator (x:[])  = show x
@@ -45,7 +45,7 @@ get_edges id graph = fmap (\(Point _ (PointInfo _ edges)) -> edges) $ get_point 
 
 --get_best_path :: (Ord b, Num b) => Graph () b ->  PointId -> PointId -> Either String (b, [String])
 get_best_path graph a b =
-    get_best_path' graph (Map.fromList []) (Map.fromList [(a, (0, []))]) b
+    get_best_path' graph (Map.fromList []) (Map.fromList [(a, (0, [a]))]) b
     where get_best_path' graph resolved front target = 
               if target `Map.member` resolved
               then to_either ("we've made it sure that " ++ show target ++ " exists in 'resolved'") $ Map.lookup target resolved
@@ -59,11 +59,11 @@ resolve graph resolved front =
     do 
         min@(min_id, min_value) <- min_by get_price (Map.toList front)
         edges <- get_edges min_id graph
-        let front' = foldl (\ f e -> resolve_edge resolved f e min_value) front edges
+        let front' = foldl (resolve_edge resolved min_value) front edges
         return (graph, Map.insert min_id min_value resolved, Map.delete min_id front')
     
 
-resolve_edge resolved front (Edge id p) (price, path) = 
+resolve_edge resolved (price, path) front (Edge id p) = 
     if id `Map.member` resolved
     then front
     else case Map.lookup id front of
@@ -76,7 +76,25 @@ resolve_edge resolved front (Edge id p) (price, path) =
           new_path  = id : path
 
 
-test = Map.fromList .
+map_simple_format test =
+    Map.map (PointInfo ()) . foldl (\ accum (from, to, price) -> Map.insertWith (++) (show from) [Edge (show to) price] accum) (Map.fromList [])
+    $ do
+        (from, edges) <- test
+        (to, price)   <- edges
+        [(from, to, price), (to, from, price)]
+
+
+test2 = 
+    ("1", [("1", 0), ("2", 7), ("3", 9), ("4", 20), ("5", 20), ("6", 11)],
+     map_simple_format $
+      [(1, [(2,7),  (3,9),  (6,14)])
+      ,(2, [(3,10), (4,15)])
+      ,(3, [(4,11), (6,2)])
+      ,(4, [(5,6)])
+      ,(5, [(6,9)])
+      ])
+
+test1 = Map.fromList .
        map (\ (Point id info) -> (id, info)) $ 
        [ Point "A" (PointInfo () [Edge "B" 1, Edge "C" 2])
        , Point "B" (PointInfo () [Edge "A" 1, Edge "D" 2])
@@ -84,5 +102,9 @@ test = Map.fromList .
        , Point "D" (PointInfo () [Edge "B" 2, Edge "C" 3])
        ] 
 
+test (from, expected, graph) =
+    do 
+        tests <- sequence . map (\(to, price) -> fmap (\x -> (from, to, price,x)) (get_best_path graph from to) ) $ expected
+        return . filter (\(from, to, price, (actual_price, actual_path)) -> price /= actual_price) $ tests
 
 main = print "sdgf"

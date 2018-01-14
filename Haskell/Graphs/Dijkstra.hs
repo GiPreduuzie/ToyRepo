@@ -13,10 +13,21 @@ getPointEdges (Point _ edges) = edges
 getBestPath :: Graph a -> PointId -> PointId -> [PointId]
 getBestPath graph a b = reverse graph a b (getBestPath' [a])
 
-getBestPath' graph a b resolved =
+getBestPath' graph b resolved =
   if (resolved `containsKey` b)
   then resolved
-  else getBestPath' graph a b (resolve graph resolved)
+  else getBestPath' graph b (resolve graph resolved)
+
+
+resolve graph resolved front = update_state graph resolved front (get_best front)
+
+update_state graph resolved front best_vertex =  where 
+    edges = get_edges graph
+    graph' = update_graph graph edges (get_price best_vertex)
+
+update_graph graph edges price = edges.map( \(id p) -> update_vertex( get_price (Map.get graph e)) )
+
+update_vertex point@(Point id p edges) price = if p > price then (Point id price edges) else point11
 
 resolve graph front resolved = 
     (graph', activePoint : resolved, changed ++ (front `except` activePoint))
@@ -25,7 +36,27 @@ resolve graph front resolved =
           w_point = ???
           
 
+test3 =
+    do 
+        (from, edges) <- test2
+        (to, price)   <- edges
+        [(from, to, price), (to, from, price)]
 
+foldl ( \(from, to, price) -> Map.insert from (Edge (to) ) Map.fromList [] 
+    
+
+test2 = 
+     [(1, [(2,7),  (3,9),  (6,14)])
+     ,(2, [(3,10), (4,15)])
+     ,(3, [(4,11), (6,2)])
+     ,(4, [(5,6)])
+     ,(5, [(6,9)])
+     ]
+
+do 
+    (from, edges) <- test2
+    (to, price)   <- edges
+    (from, to, price)
 
 
 test = Map.fromList .

@@ -1,3 +1,9 @@
+{-# LANGUAGE FlexibleContexts #-}
+
+module Lib
+    ( someFunc
+    ) where
+
 import qualified Data.Map as Map
 import Control.Monad
 import Control.Monad.Reader
@@ -8,7 +14,7 @@ data PointInfo a b = PointInfo a [Edge b]
 data Point a b = Point PointId (PointInfo a b)
 type Graph a b = Map.Map PointId (PointInfo a b)
 
-type WorkingPoints n = Map.Map PointId (n, [String])
+type WorkingPoints n = Map.Map PointId (n, [PointId])
 
 min_by :: Ord b => (a -> b) -> [a] -> Either String a
 min_by f []     = Left "Empty list, could not take min"
@@ -35,33 +41,34 @@ get_info (Point _ (PointInfo info _)) = info
 
 get_price (_, (price, _)) = price
  
-get_point id graph = 
-    to_either message $ 
+get_point::PointId -> ReaderT (Graph a b) (Either String) (Point a b)
+get_point id = 
     do 
-        info <- Map.lookup id graph
+        graph <- ask
+        info <- lift . to_either message . Map.lookup id $ graph
         return (Point id info) 
     where message = "Fatal::no point " ++ show id ++ " in the graph"
 
-get_edges id graph = fmap (\(Point _ (PointInfo _ edges)) -> edges) $ get_point id graph
+
+get_edges id = fmap (\(Point _ (PointInfo _ edges)) -> edges) . get_point $ id
 
 get_best_path a b =
-    do
-        graph <- ask
-        return $ get_best_path' graph (Map.fromList []) (Map.fromList [(a, (0, [a]))]) b
-        where get_best_path' graph resolved front target = 
-                  if target `Map.member` resolved
-                  then to_either ("we've made it sure that " ++ show target ++ " exists in 'resolved'") $ Map.lookup target resolved
-                  else
-                      do
-                          (graph', resolved', front') <- resolve graph resolved front
-                          get_best_path' graph' resolved' front' target
-
-resolve graph resolved front = 
+        (get_best_path' (Map.fromList []) (Map.fromList [(a, (0, [a]))]) b)
+        where get_best_path' resolved front target = 
+                      case target `Map.lookup` resolved of
+                                  (Just x) -> return x
+                                  Nothing  -> do 
+                                                (resolved', front') <- resolve resolved front
+                                                get_best_path' resolved' front' target
+                      
+ 
+resolve resolved front = 
     do 
-        min@(min_id, min_value) <- min_by get_price (Map.toList front)
-        edges <- get_edges min_id graph
+        min@(min_id, min_value) <- lift $ min_by get_price (Map.toList front)
+        edges <- get_edges min_id
         let front' = foldl (resolve_edge resolved min_value) front edges
-        return (graph, Map.insert min_id min_value resolved, Map.delete min_id front')
+        return (Map.insert min_id min_value resolved, Map.delete min_id front')
+
     
 
 resolve_edge resolved (price, path) front (Edge id p) = 
@@ -87,9 +94,9 @@ map_simple_format test =
 
 
 test2 = 
-    ("1", [("1", 0), ("2", 7), ("3", 9), ("4", 20), ("5", 20), ("6", 11)],
+    ("1", [("1", 0::Integer), ("2", 7), ("3", 9), ("4", 20), ("5", 20), ("6", 11)],
      map_simple_format $
-      [(1, [(2,7),  (3,9),  (6,14)])
+      [(1, [(2,7),  (3,9), (6,14)])
       ,(2, [(3,10), (4,15)])
       ,(3, [(4,11), (6,2)])
       ,(4, [(5,6)])
@@ -106,7 +113,17 @@ test1 = Map.fromList .
 
 test (from, expected, graph) =
     do 
-        tests <- sequence . map (\(to, price) -> fmap (\x -> (from, to, price,x)) (get_best_path graph from to) ) $ expected
+        tests <- sequence . map (\(to, price) -> fmap (\x -> (from, to, price,x)) (runReaderT (get_best_path from to) graph) ) $ expected
         return . filter (\(from, to, price, (actual_price, actual_path)) -> price /= actual_price) $ tests
 
 main = print "sdgf"
+
+do_with_reader :: ReaderT String Maybe String
+do_with_reader =
+    do
+        value  <- ask
+        value2 <- lift . Just $ "<?>"
+        return $ value ++ value2
+        
+someFunc :: IO ()
+someFunc = print . show $ test test2

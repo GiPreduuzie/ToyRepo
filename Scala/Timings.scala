@@ -6,17 +6,17 @@ import scala.collection.JavaConverters._
 
 object Timings {
   def main(args: Array[String]) = {
-    val input : List[Option[Int]] = (1 to 10000000).map(Some(_)).toList
+    val input: List[Option[Int]] = (1 to 10000000).map(Some(_)).toList
 
-    val t1 = timeCycling2 ("collect") {
+    val t1 = timeCycling2("collect") {
       input.collect { case Some(x) => x }
     }
 
-    val t2 = timeCycling2 ("flat map") {
+    val t2 = timeCycling2("flat map") {
       input.flatMap(_.toList)
     }
 
-    val t3 = timeCycling2 ("pattern matching") {
+    val t3 = timeCycling2("pattern matching") {
       val result = new ListBuffer[Int]
       input.foreach {
         case Some(v) => result += v
@@ -25,7 +25,7 @@ object Timings {
       result.toList
     }
 
-    val t4 = timeCycling2 ("with list buffer") {
+    val t4 = timeCycling2("with list buffer") {
       val result = new ListBuffer[Int]
       input.foreach { x =>
         if (x.nonEmpty) result += x.get
@@ -33,7 +33,7 @@ object Timings {
       result.toList
     }
 
-    val t5 = timeCycling2 ("with list recursion") {
+    val t5 = timeCycling2("with list") {
       var result = List.empty[Int]
       input.foreach { x =>
         if (x.nonEmpty) result = x.get :: result
@@ -41,11 +41,11 @@ object Timings {
       result
     }
 
-    val t6 = timeCycling2 ("flatten") {
+    val t6 = timeCycling2("flatten") {
       input.flatten
     }
 
-    val t7 = timeCycling2 ("with array list") {
+    val t7 = timeCycling2("with array list") {
       val result = new java.util.ArrayList[Int](input.count(_.isDefined) + 1)
       input.foreach { x =>
         if (x.nonEmpty) result.add(x.get)
@@ -53,7 +53,7 @@ object Timings {
       result.asScala
     }
 
-    val t8 = timeCycling2 ("with array") {
+    val t8 = timeCycling2("with array") {
       val result = new Array[Int](input.count(_.isDefined) + 1)
       var i = 0
       input.foreach { x =>
@@ -65,18 +65,18 @@ object Timings {
       result.toSeq
     }
 
-    List(t1, t2, t3, t4, t5, t6, t7, t8).foreach { case (name, (_, time)) =>
-      println(s"### t1: $time ms ($name)")
-    }
+    List(t1, t2, t3, t4, t5, t6, t7, t8).zipWithIndex.map { case ((name, (_, time)), i) =>
+      s"### t${i + 1}: $time ms ($name)"
+    }.foreach(println)
 
-//    ### t1: 74266 ms (collect)
-//    ### t1: 28899 ms (flat map)
-//    ### t1: 92293 ms (pattern matching)
-//    ### t1: 29327 ms (with list buffer)
-//    ### t1: 80015 ms (with list recursion)
-//    ### t1: 73811 ms (flatten)
-//    ### t1: 10598 ms (with array list)
-//    ### t1:  6316 ms (with array)
+//    ### t1: 79181 ms (collect)
+//    ### t2: 24847 ms (flat map)
+//    ### t3: 87618 ms (pattern matching)
+//    ### t4: 25705 ms (with list buffer)
+//    ### t5: 80612 ms (with list)
+//    ### t6: 71471 ms (flatten)
+//    ### t7: 10554 ms (with array list)
+//    ### t8:  6119 ms (with array)
 
   }
 
@@ -103,19 +103,5 @@ object Timings {
     val g = f
     val finished = DateTime.now()
     (g, finished.getMillis - started.getMillis)
-  }
-}
-
-object ToMySeqExtentions {
-  implicit def toMySeqExtentions[T](xs: Seq[T]): MySeqExtentions[T] = new MySeqExtentions(xs)
-}
-
-class MySeqExtentions[A](xs: Seq[A]) {
-  import scala.collection.JavaConversions._
-
-  def collect2[B](p: A => Boolean, f: A => B) = {
-    val result = new java.util.ArrayList[B](xs.count(x => p(x)) + 1)
-    xs.foreach { x => if (p(x)) result.add(f(x)) }
-    result.toList
   }
 }

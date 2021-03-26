@@ -1,8 +1,9 @@
 import scala.util.{Failure, Success, Try}
 
 object TryCatchMonad {
+  import TryCatch._
 
-  def main(args: Array[String]) = {
+  def main(args: Array[String]): Unit = {
 
     val res = for {
       i <- Try(a()).mapException(ex => "a: " + ex.getMessage)
@@ -27,7 +28,12 @@ object TryCatchMonad {
     3
   }
 
-  implicit class TryCatchExt[T](tryExp: Try[T]) {
+}
+
+
+object TryCatch {
+
+  implicit class RichTry[T](tryExp: Try[T]) {
 
     def mapException[U](f: Throwable => U): TryCatch[T, U] = {
       tryExp match {
@@ -35,34 +41,32 @@ object TryCatchMonad {
         case Success(value) => TryValue(value)
       }
     }
-
   }
 
-  sealed trait TryCatch[T, U] {
-    def map[R](f: T => R): TryCatch[R, U]
+}
 
-    def flatMap[R](f: T => TryCatch[R, U]): TryCatch[R, U]
+sealed trait TryCatch[T, U] {
+  def map[R](f: T => R): TryCatch[R, U]
 
-    def resolve[R](onValue: T => R, onError: U => R): R
-  }
+  def flatMap[R](f: T => TryCatch[R, U]): TryCatch[R, U]
 
-  case class TryValue[T, U](value: T) extends TryCatch[T, U] {
-    override def map[R](f: T => R): TryCatch[R, U] = copy(value = f(value))
+  def resolve[R](onValue: T => R, onError: U => R): R
+}
 
-    override def flatMap[R](f: T => TryCatch[R, U]): TryCatch[R, U] = f(value)
+case class TryValue[T, U](value: T) extends TryCatch[T, U] {
+  override def map[R](f: T => R): TryCatch[R, U] = copy(value = f(value))
 
-    override def resolve[R](onValue: T => R, onError: U => R): R = onValue(value)
-  }
+  override def flatMap[R](f: T => TryCatch[R, U]): TryCatch[R, U] = f(value)
 
-  case class TryError[T, U](error: U) extends TryCatch[T, U] {
-    override def map[R](f: T => R): TryCatch[R, U] = copy(error = error)
+  override def resolve[R](onValue: T => R, onError: U => R): R = onValue(value)
+}
 
-    override def flatMap[R](f: T => TryCatch[R, U]): TryCatch[R, U] = copy(error = error)
+case class TryError[T, U](error: U) extends TryCatch[T, U] {
+  override def map[R](f: T => R): TryCatch[R, U] = copy(error = error)
 
-    override def resolve[R](onValue: T => R, onError: U => R): R = onError(error)
-  }
+  override def flatMap[R](f: T => TryCatch[R, U]): TryCatch[R, U] = copy(error = error)
 
-
+  override def resolve[R](onValue: T => R, onError: U => R): R = onError(error)
 }
 
 
